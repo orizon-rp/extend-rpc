@@ -1,4 +1,4 @@
-# s&box Async RPC Library
+# Extend RPC Library
 
 A library for **s&box** that makes it easy to send RPC calls and receive **asynchronous callbacks**.  
 It simplifies **client ↔ server** communication while taking full advantage of `async/await`.
@@ -17,7 +17,7 @@ It simplifies **client ↔ server** communication while taking full advantage of
 ---
 
 ## 📦 Installation
-Clone or download this repository and add its content directly into your **s&box** project (for example in a `Libraries/AsyncRpc` folder).  
+Clone or download this repository and add its content directly into your **s&box** project at `Libraries/extend.extend_rpc` folder.  
 
 ---
 
