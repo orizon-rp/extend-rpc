@@ -2,11 +2,11 @@
 
 namespace Extend.Callbacks;
 
-internal static class RpcCallbackHandler
+public static class RpcCallbackHandler
 {
 	public static async Task<T?> OnRpc<T>( WrappedMethod<Task<T>> m, params object[] args )
 	{
-		if ( Sandbox.Networking.IsHost )
+		if ( Networking.IsHost )
 			return await m.Resume();
 
 		var attribute = m.GetAttribute<RpcCallbackAttribute>();
