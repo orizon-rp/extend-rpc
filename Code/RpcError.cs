@@ -25,9 +25,4 @@ public abstract record RpcError
 	/// Indicates that the RPC handler was not found.
 	/// </summary>
 	public record HandlerNotFound : Exception;
-
-	/// <summary>
-	/// Indicates that the arguments passed to the RPC method were invalid.
-	/// </summary>
-	public record InvalidArguments : Exception;
 }

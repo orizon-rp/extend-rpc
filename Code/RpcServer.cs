@@ -23,7 +23,7 @@ public static class RpcServer
 			{
 				var error = $"No handler registered for method {request.Method}";
 
-				using ( Rpc.FilterInclude( Sandbox.Rpc.Caller ) )
+				using ( Rpc.FilterInclude( Rpc.Caller ) )
 					RpcClient.OnRpcError( request, new RpcError.HandlerNotFound { Message = error }, request.Method );
 
 				return;
@@ -37,14 +37,14 @@ public static class RpcServer
 			var obj = Json.Deserialize<Dictionary<string, JsonElement>>( json );
 			var finalResult = obj.GetValueOrDefault( "Result" ).Deserialize( returnType );
 
-			using ( Sandbox.Rpc.FilterInclude( Sandbox.Rpc.Caller ) )
+			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcResponse( request, finalResult, request.Method );
 		}
 		catch ( Exception e )
 		{
 			Log.Error( $"RPC execution error for {request.Method}: {e}" );
 
-			using ( Sandbox.Rpc.FilterInclude( Sandbox.Rpc.Caller ) )
+			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcError( request, new RpcError.Exception { Message = e.Message }, request.Method );
 		}
 	}
