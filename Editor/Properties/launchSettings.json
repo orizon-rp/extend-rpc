@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Editor": {
+      "commandName": "Executable",
+      "executablePath": "C:\\program files (x86)\\steam\\steamapps\\common\\sbox\\sbox-dev.exe",
+      "commandLineArgs": "-project \u0022C:\\Users\\bubbl\\Documents\\S\u0026box Projects\\extend\\Libraries\\ExtendRpc\\extendrpc.sbproj\u0022"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "2+3rUk8pjsM=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\bubbl\\Documents\\S&box Projects\\extend\\Libraries\\ExtendRpc\\Code\\extend_rpc.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\bubbl\\.nuget\\packages\\microsoft.netcore.app.ref\\9.0.7\\microsoft.netcore.app.ref.9.0.7.nupkg.sha512",
+    "C:\\Users\\bubbl\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.7\\microsoft.windowsdesktop.app.ref.9.0.7.nupkg.sha512",
+    "C:\\Users\\bubbl\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.7\\microsoft.aspnetcore.app.ref.9.0.7.nupkg.sha512"
+  ],
+  "logs": []
+}
