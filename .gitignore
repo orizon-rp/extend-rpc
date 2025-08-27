@@ -1,18 +1,29 @@
-*/config/development
-*/logs/log-*.php
-!*/logs/index.html
-*/cache/*
-!system/cache/*
-!*/cache/index.html
-!*/cache/.htaccess
 
-user_guide_src/build/*
-user_guide_src/cilexer/build/*
-user_guide_src/cilexer/dist/*
-user_guide_src/cilexer/pycilexer.egg-info/*
+# This file describes files and paths that should not be tracked by Git version control
+# https://git-scm.com/docs/gitignore
 
-#codeigniter 3
-application/logs/*
-!application/logs/index.html
-!application/logs/.htaccess
-/vendor/
+# Auto-generated code editor files
+.vs/*
+.vscode/*
+.idea/*
+*.csproj
+obj
+bin
+Properties/*
+code/obj/*
+code/Properties/*
+
+# Auto-generated asset related files
+.sbox/*
+.bin/*
+*.generated.*
+*.*_c
+!*.shader_c
+*.los
+*.vpk
+*launchSettings.json
+*.sln
+*.user
+
+# Exported / standalone games
+Exports/
