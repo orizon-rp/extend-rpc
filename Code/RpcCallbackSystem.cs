@@ -16,7 +16,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 
 	public RpcCallbackSystem( Scene scene ) : base( scene )
 	{
-		RefreshHandlers();
+		Listen( Stage.SceneLoaded, 0, RefreshHandlers, nameof(RpcCallbackSystem) );
 	}
 
 	private void RefreshHandlers()
@@ -73,7 +73,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 
 						OnOperationFailed?.Invoke( message, operation.Exception );
 
-						using ( Sandbox.Rpc.FilterInclude( Sandbox.Rpc.Caller ) )
+						using ( Rpc.FilterInclude( Rpc.Caller ) )
 							RpcClient.OnRpcError( message,
 								new RpcError.HandlerNotFound { Message = operation.Exception.ToString() },
 								message.Method );
@@ -93,7 +93,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 			Log.Error( $"RPC operation {id} timed out after {timeout}" );
 			OnOperationTimeout?.Invoke( timeoutMessage );
 
-			using ( Sandbox.Rpc.FilterInclude( Sandbox.Rpc.Caller ) )
+			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcError( timeoutMessage,
 					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" },
 					string.Empty );
@@ -107,7 +107,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 			Log.Error( $"RPC operation {id} timed out after {timeout}" );
 			OnOperationTimeout?.Invoke( timeoutMessage );
 
-			using ( Sandbox.Rpc.FilterInclude( Sandbox.Rpc.Caller ) )
+			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcError( timeoutMessage,
 					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" },
 					string.Empty );
