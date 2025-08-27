@@ -6,7 +6,7 @@ namespace Extend.Callbacks;
 
 internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 {
-	public readonly ConcurrentDictionary<string, RpcHandlerInfo> Handlers = new();
+	public readonly ConcurrentDictionary<int, RpcHandlerInfo> Handlers = new();
 	public readonly ConcurrentDictionary<Guid, RpcPendingOperation> Operations = new();
 
 	public static event Action<RpcHandlerInfo>? OnHandlerRegistered;
@@ -36,8 +36,8 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 			};
 
 			Log.Info( $"Registering RPC handler: {method.Name}" );
-
-			if ( !Handlers.TryAdd( method.Name, handlerInfo ) )
+			
+			if ( !Handlers.TryAdd( method.Identity, handlerInfo ) )
 			{
 				Log.Warning(
 					$"Failed to register RPC handler: {method.Name}. A handler with the same name already exists" );
@@ -65,7 +65,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 					Operations.TryRemove( id, out _ );
 
 					var duration = DateTime.UtcNow - startTime;
-					var message = new RpcMessage { Id = id, Method = operation.MethodName };
+					var message = new RpcMessage { Id = id, MethodIdent = operation.MethodIdent };
 
 					if ( operation.Exception is not null )
 					{
@@ -76,7 +76,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 						using ( Rpc.FilterInclude( Rpc.Caller ) )
 							RpcClient.OnRpcError( message,
 								new RpcError.HandlerNotFound { Message = operation.Exception.ToString() },
-								message.Method );
+								message.MethodIdent );
 
 						return default;
 					}
@@ -88,49 +88,47 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 				await Task.Delay( 10, cts.Token );
 			}
 
-			var timeoutMessage = new RpcMessage { Id = id, Method = "TIMEOUT" };
+			var timeoutMessage = new RpcMessage { Id = id };
 
 			Log.Error( $"RPC operation {id} timed out after {timeout}" );
 			OnOperationTimeout?.Invoke( timeoutMessage );
 
 			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcError( timeoutMessage,
-					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" },
-					string.Empty );
+					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" }, -1 );
 
 			return default;
 		}
 		catch ( OperationCanceledException )
 		{
-			var timeoutMessage = new RpcMessage { Id = id, Method = "TIMEOUT" };
+			var timeoutMessage = new RpcMessage { Id = id };
 
 			Log.Error( $"RPC operation {id} timed out after {timeout}" );
 			OnOperationTimeout?.Invoke( timeoutMessage );
 
 			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcError( timeoutMessage,
-					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" },
-					string.Empty );
+					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" }, -1 );
 
 			return default;
 		}
 	}
 
-	public void CompleteResponse( RpcMessage response, object? result, string methodName = "" )
+	public void CompleteResponse( RpcMessage response, object? result, int methodIdent )
 	{
 		var operation = new RpcPendingOperation
 		{
-			Result = result, CompletedAt = DateTime.UtcNow, MethodName = methodName
+			Result = result, CompletedAt = DateTime.UtcNow, MethodIdent = methodIdent
 		};
 
 		Operations.TryAdd( response.Id, operation );
 	}
 
-	public void CompleteWithError( RpcMessage response, RpcError exception, string methodName = "" )
+	public void CompleteWithError( RpcMessage response, RpcError exception, int methodIdent )
 	{
 		var operation = new RpcPendingOperation
 		{
-			Exception = exception, CompletedAt = DateTime.UtcNow, MethodName = methodName
+			Exception = exception, CompletedAt = DateTime.UtcNow, MethodIdent = methodIdent
 		};
 
 		Operations.TryAdd( response.Id, operation );

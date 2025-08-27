@@ -8,7 +8,7 @@ public sealed class RpcPendingOperation
 	/// <summary>
 	/// Gets the name of the RPC method.
 	/// </summary>
-	public required string MethodName { get; init; }
+	public required int MethodIdent { get; init; }
 	
 	/// <summary>
 	/// Gets the result of the RPC operation.

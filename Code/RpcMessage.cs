@@ -15,7 +15,7 @@ public readonly struct RpcMessage
 	/// <summary>
 	/// The name of the method to be invoked on the server.
 	/// </summary>
-	public string Method { get; init; }
+	public int MethodIdent { get; init; }
 
 	/// <summary>
 	/// The timestamp when the message was created.
@@ -41,12 +41,12 @@ public readonly struct RpcMessage
 	/// <summary>
 	/// Creates a new instance of <see cref="RpcMessage"/> with the given method name and sender identifier.
 	/// </summary>
-	/// <param name="method">The name of the method to be invoked on the server.</param>
+	/// <param name="methodIdent">The method identity of the method to be invoked on the server.</param>
 	/// <param name="methodReturnTypeName">The name of the method to be invoked on the server.</param>
 	/// <param name="sender">The identifier of the sender (client) of the message.</param>
 	/// <returns>A new instance of <see cref="RpcMessage"/>.</returns>
-	public static RpcMessage Create( string method, string methodReturnTypeName, Guid sender ) => new()
+	public static RpcMessage Create( int methodIdent, string methodReturnTypeName, Guid sender ) => new()
 	{
-		Id = Guid.NewGuid(), Method = method, MethodReturnTypeName = methodReturnTypeName, Timestamp = DateTime.UtcNow, Sender = sender
+		Id = Guid.NewGuid(), MethodIdent = methodIdent, MethodReturnTypeName = methodReturnTypeName, Timestamp = DateTime.UtcNow, Sender = sender
 	};
 }
