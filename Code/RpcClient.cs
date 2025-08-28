@@ -19,12 +19,12 @@ public static class RpcClient
 	/// <param name="args">Arguments for the RPC method</param>
 	/// <returns>The result of the RPC call</returns>
 	/// <exception cref="Exception">If the RPC call fails</exception>
-	public static async Task<TResult?> Send<TResult>( int methodIdent, Type methodReturnType, TimeSpan timeout, CancellationToken cancellationToken,
+	public static async Task<TResult?> Send<TResult>( int methodIdent, Type methodReturnType, TimeSpan timeout,
+		CancellationToken cancellationToken,
 		params object[] args )
 	{
-		var request = RpcMessage.Create( methodIdent, methodReturnType.FullName ?? methodReturnType.Name,
-			Connection.Local.Id );
-		
+		var request = RpcMessage.Create( methodIdent, methodReturnType, Connection.Local.Id );
+
 		try
 		{
 			RpcServer.SendRpc( request, args );
@@ -34,7 +34,7 @@ public static class RpcClient
 		{
 			var method = TypeLibrary.GetMemberByIdent( methodIdent ) as MethodDescription;
 			Log.Warning( $"RPC call failed for {method!.Name}: {e.Message}" );
-			
+
 			return default!;
 		}
 	}

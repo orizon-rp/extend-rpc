@@ -30,7 +30,12 @@ public readonly struct RpcMessage
 	/// <summary>
 	/// The name of the return type of the method to be invoked on the server.
 	/// </summary>
-	public string MethodReturnTypeName { get; private init; }
+	public int MethodReturnTypeIdent { get; private init; }
+
+	/// <summary>
+	/// The arguments of the method to be invoked on the server.
+	/// </summary>
+	public int[] GenericArguments { get; private init; }
 
 	/// <summary>
 	/// Gets the connection associated with the sender of the message.
@@ -42,15 +47,21 @@ public readonly struct RpcMessage
 	/// Creates a new instance of <see cref="RpcMessage"/> with the given method name and sender identifier.
 	/// </summary>
 	/// <param name="methodIdent">The method identity of the method to be invoked on the server.</param>
-	/// <param name="methodReturnTypeName">The name of the method to be invoked on the server.</param>
+	/// <param name="methodReturnType">The type of the method to be invoked on the server.</param>
 	/// <param name="sender">The identifier of the sender (client) of the message.</param>
 	/// <returns>A new instance of <see cref="RpcMessage"/>.</returns>
-	public static RpcMessage Create( int methodIdent, string methodReturnTypeName, Guid sender ) => new()
+	public static RpcMessage Create( int methodIdent, Type methodReturnType, Guid sender )
 	{
-		Id = Guid.NewGuid(),
-		MethodIdent = methodIdent,
-		MethodReturnTypeName = methodReturnTypeName,
-		Timestamp = DateTime.UtcNow,
-		Sender = sender
-	};
+		var methodReturnTypeIdent = TypeLibrary.GetTypeIdent( methodReturnType );
+		
+		return new RpcMessage
+		{
+			Id = Guid.NewGuid(),
+			MethodIdent = methodIdent,
+			MethodReturnTypeIdent = methodReturnTypeIdent,
+			GenericArguments = [],
+			Timestamp = DateTime.UtcNow,
+			Sender = sender
+		};
+	}
 }

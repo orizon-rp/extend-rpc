@@ -16,7 +16,7 @@ public static class RpcCallbackHandler
 
 		if ( m.Object is Component component )
 			cancellationToken = component.GameObject.EnabledToken;
-			
+		
 		return await RpcClient.Send<T>( m.MethodIdentity, typeof(T), timeout, cancellationToken, args );
 	}
 }
