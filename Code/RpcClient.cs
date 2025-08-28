@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace Extend.Callbacks;
 
@@ -14,19 +15,20 @@ public static class RpcClient
 	/// <param name="methodIdent">The method ident of the RPC method</param>
 	/// <param name="methodReturnType">The type of the method return type</param>
 	/// <param name="timeout">The maximum time to wait in seconds for the response./></param>
+	/// <param name="cancellationToken">The cancellation token</param>
 	/// <param name="args">Arguments for the RPC method</param>
 	/// <returns>The result of the RPC call</returns>
 	/// <exception cref="Exception">If the RPC call fails</exception>
-	public static async Task<TResult?> Send<TResult>( int methodIdent, Type methodReturnType, TimeSpan timeout,
+	public static async Task<TResult?> Send<TResult>( int methodIdent, Type methodReturnType, TimeSpan timeout, CancellationToken cancellationToken,
 		params object[] args )
 	{
 		var request = RpcMessage.Create( methodIdent, methodReturnType.FullName ?? methodReturnType.Name,
 			Connection.Local.Id );
-
+		
 		try
 		{
 			RpcServer.SendRpc( request, args );
-			return await RpcCallbackSystem.Current.WaitForResponse<TResult>( request.Id, timeout );
+			return await RpcCallbackSystem.Current.WaitForResponse<TResult>( request.Id, timeout, cancellationToken );
 		}
 		catch ( Exception e )
 		{
@@ -46,20 +48,18 @@ public static class RpcClient
 	[Sandbox.Rpc.Broadcast( NetFlags.Reliable | NetFlags.HostOnly )]
 	internal static void OnRpcResponse( RpcMessage response, object? result, int methodIdent )
 	{
-		// Log.Info( $"RPC Response received for {methodName}: {result}" );
 		RpcCallbackSystem.Current.CompleteResponse( response, result, methodIdent );
 	}
 
 	/// <summary>
 	/// Internal callback for when the server sends an error RPC response
 	/// </summary>
-	/// <param name="response">The original RPC message</param>
-	/// <param name="errorMessage">The error message from the server</param>
+	/// <param name="id">The original RPC message id</param>
+	/// <param name="error">The error from the server</param>
 	/// <param name="methodIdent">The method identity of the RPC method</param>
 	[Sandbox.Rpc.Broadcast( NetFlags.Reliable | NetFlags.HostOnly )]
-	internal static void OnRpcError( RpcMessage response, RpcError errorMessage, int methodIdent )
+	internal static void OnRpcError( Guid id, RpcError error, int methodIdent )
 	{
-		Log.Warning( $"RPC Error received for {methodIdent}: {errorMessage}" );
-		RpcCallbackSystem.Current.CompleteWithError( response, errorMessage, methodIdent );
+		RpcCallbackSystem.Current.CompleteWithError( id, error, methodIdent );
 	}
 }

@@ -1,28 +1,35 @@
 namespace Extend.Callbacks;
 
-/// <summary>
-/// Represents an error that occurred during a remote procedure call (RPC).
-/// </summary>
-public abstract record RpcError
+public enum RpcErrorCode
 {
-	/// <summary>
-	/// Represents an exception that occurred during a remote procedure call.
-	/// </summary>
-	public record Exception : RpcError
+	Unknown = 0,
+	Timeout = 1,
+	CallbackNotFound = 2
+}
+
+/// <summary>
+/// Represents an error that occurred during an RPC (Remote Procedure Call) operation.
+/// </summary>
+public readonly struct RpcError
+{
+	public RpcErrorCode Code { get; init; }
+	public string Message { get; init; }
+
+	public RpcError()
 	{
-		/// <summary>
-		/// The error message.
-		/// </summary>
-		public required string Message { get; init; }
 	}
 
-	/// <summary>
-	/// Indicates that the RPC operation timed out.
-	/// </summary>
-	public record Timeout : Exception;
+	public RpcError( RpcErrorCode code, string message )
+	{
+		Code = code;
+		Message = message;
+	}
 
-	/// <summary>
-	/// Indicates that the RPC handler was not found.
-	/// </summary>
-	public record HandlerNotFound : Exception;
+	public static RpcError Timeout( Guid id, int timeout ) => new(RpcErrorCode.Timeout, $"Timeout for operation {id} after {timeout} seconds");
+	public static RpcError Unknown(int methodIdent, Exception ex) => new(RpcErrorCode.Unknown, $"Unknown error for method {methodIdent}: {ex}");
+
+	public static RpcError CallbackNotFound( int methodIdent ) => new(RpcErrorCode.CallbackNotFound,
+		$"Callback for method {methodIdent} not found");
+
+	public override string ToString() => $"{Code}: {Message}";
 }

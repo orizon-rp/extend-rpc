@@ -26,7 +26,7 @@ public readonly struct RpcMessage
 	/// The identifier of the sender (client) of the message.
 	/// </summary>
 	public Guid Sender { get; private init; }
-	
+
 	/// <summary>
 	/// The name of the return type of the method to be invoked on the server.
 	/// </summary>
@@ -47,6 +47,10 @@ public readonly struct RpcMessage
 	/// <returns>A new instance of <see cref="RpcMessage"/>.</returns>
 	public static RpcMessage Create( int methodIdent, string methodReturnTypeName, Guid sender ) => new()
 	{
-		Id = Guid.NewGuid(), MethodIdent = methodIdent, MethodReturnTypeName = methodReturnTypeName, Timestamp = DateTime.UtcNow, Sender = sender
+		Id = Guid.NewGuid(),
+		MethodIdent = methodIdent,
+		MethodReturnTypeName = methodReturnTypeName,
+		Timestamp = DateTime.UtcNow,
+		Sender = sender
 	};
 }

@@ -12,14 +12,20 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 	public static event Action<RpcHandlerInfo>? OnHandlerRegistered;
 	public static event Action<RpcMessage, TimeSpan>? OnOperationCompleted;
 	public static event Action<RpcMessage, RpcError>? OnOperationFailed;
-	public static event Action<RpcMessage>? OnOperationTimeout;
+	public static event Action<Guid>? OnOperationTimeout;
 
 	public RpcCallbackSystem( Scene scene ) : base( scene )
 	{
-		Listen( Stage.SceneLoaded, 0, RefreshHandlers, nameof(RpcCallbackSystem) );
+		Listen( Stage.SceneLoaded, 0, RegisterHandlers, nameof(RpcCallbackSystem) );
 	}
 
-	private void RefreshHandlers()
+	public override void Dispose()
+	{
+		Handlers.Clear();
+		Operations.Clear();
+	}
+
+	private void RegisterHandlers()
 	{
 		Handlers.Clear();
 
@@ -36,7 +42,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 			};
 
 			Log.Info( $"Registering RPC handler: {method.Name}" );
-			
+
 			if ( !Handlers.TryAdd( method.Identity, handlerInfo ) )
 			{
 				Log.Warning(
@@ -50,15 +56,16 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 		Log.Info( $"Registered {Handlers.Count} RPC handlers" );
 	}
 
-	public async Task<TResult?> WaitForResponse<TResult>( Guid id, TimeSpan timeout )
+	public async Task<TResult?> WaitForResponse<TResult>( Guid id, TimeSpan timeout, CancellationToken token = default )
 	{
 		var startTime = DateTime.UtcNow;
 
 		using var cts = new CancellationTokenSource( timeout );
+		using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource( token, cts.Token );
 
 		try
 		{
-			while ( !cts.Token.IsCancellationRequested )
+			while ( !combinedCts.Token.IsCancellationRequested )
 			{
 				if ( Operations.TryGetValue( id, out var operation ) )
 				{
@@ -69,46 +76,35 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 
 					if ( operation.Exception is not null )
 					{
-						Log.Error( operation.Exception );
-
-						OnOperationFailed?.Invoke( message, operation.Exception );
+						Log.Warning( $"RPC operation {id} failed: {operation.Exception.Value}" );
+						OnOperationFailed?.Invoke( message, operation.Exception.Value );
 
 						using ( Rpc.FilterInclude( Rpc.Caller ) )
-							RpcClient.OnRpcError( message,
-								new RpcError.HandlerNotFound { Message = operation.Exception.ToString() },
-								message.MethodIdent );
+							RpcClient.OnRpcError( id, operation.Exception.Value, message.MethodIdent );
 
 						return default;
 					}
 
 					OnOperationCompleted?.Invoke( message, duration );
-					return (TResult)operation.Result!;
+
+					if ( operation.Result is null )
+						return default;
+
+					return (TResult)operation.Result;
 				}
 
-				await Task.Delay( 10, cts.Token );
+				await Task.Delay( 10, combinedCts.Token );
 			}
-
-			var timeoutMessage = new RpcMessage { Id = id };
-
-			Log.Error( $"RPC operation {id} timed out after {timeout}" );
-			OnOperationTimeout?.Invoke( timeoutMessage );
-
-			using ( Rpc.FilterInclude( Rpc.Caller ) )
-				RpcClient.OnRpcError( timeoutMessage,
-					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" }, -1 );
 
 			return default;
 		}
 		catch ( OperationCanceledException )
 		{
-			var timeoutMessage = new RpcMessage { Id = id };
-
-			Log.Error( $"RPC operation {id} timed out after {timeout}" );
-			OnOperationTimeout?.Invoke( timeoutMessage );
+			var error = RpcError.Timeout( id, timeout.Seconds );
+			OnOperationTimeout?.Invoke( id );
 
 			using ( Rpc.FilterInclude( Rpc.Caller ) )
-				RpcClient.OnRpcError( timeoutMessage,
-					new RpcError.Timeout { Message = $"RPC operation {id} timed out after {timeout}" }, -1 );
+				RpcClient.OnRpcError( id, error, -1 );
 
 			return default;
 		}
@@ -124,13 +120,13 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 		Operations.TryAdd( response.Id, operation );
 	}
 
-	public void CompleteWithError( RpcMessage response, RpcError exception, int methodIdent )
+	public void CompleteWithError( Guid id, RpcError exception, int methodIdent )
 	{
 		var operation = new RpcPendingOperation
 		{
 			Exception = exception, CompletedAt = DateTime.UtcNow, MethodIdent = methodIdent
 		};
 
-		Operations.TryAdd( response.Id, operation );
+		Operations.TryAdd( id, operation );
 	}
 }

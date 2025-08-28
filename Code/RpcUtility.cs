@@ -15,8 +15,9 @@ public static class RpcUtility
 
 		foreach ( var component in components )
 		{
-			var type = Game.TypeLibrary.GetType( component.GetType() );
-
+			var type = TypeLibrary.GetType( component.GetType() );
+			if ( type is null ) continue;
+			
 			foreach ( var method in type.Methods )
 			{
 				var attribute = method.GetCustomAttribute<RpcCallbackAttribute>();

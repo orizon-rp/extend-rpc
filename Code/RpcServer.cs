@@ -21,10 +21,10 @@ public static class RpcServer
 		{
 			if ( !RpcCallbackSystem.Current.Handlers.TryGetValue( request.MethodIdent, out var handler ) )
 			{
-				var error = $"No handler registered for method {request.MethodIdent}";
+				var error = RpcError.CallbackNotFound( request.MethodIdent );
 
 				using ( Rpc.FilterInclude( Rpc.Caller ) )
-					RpcClient.OnRpcError( request, new RpcError.HandlerNotFound { Message = error }, request.MethodIdent );
+					RpcClient.OnRpcError( request.Id, error, request.MethodIdent );
 
 				return;
 			}
@@ -36,16 +36,17 @@ public static class RpcServer
 			var json = Json.Serialize( taskResult );
 			var obj = Json.Deserialize<Dictionary<string, JsonElement>>( json );
 			var finalResult = obj.GetValueOrDefault( "Result" ).Deserialize( returnType );
-			
+
 			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcResponse( request, finalResult, request.MethodIdent );
 		}
 		catch ( Exception e )
 		{
+			var error = RpcError.Unknown( request.MethodIdent, e );
 			Log.Error( $"RPC execution error for {request.MethodIdent}: {e}" );
 
 			using ( Rpc.FilterInclude( Rpc.Caller ) )
-				RpcClient.OnRpcError( request, new RpcError.Exception { Message = e.Message }, request.MethodIdent );
+				RpcClient.OnRpcError( request.Id, error, request.MethodIdent );
 		}
 	}
 }
