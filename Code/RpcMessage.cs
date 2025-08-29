@@ -52,7 +52,10 @@ public readonly struct RpcMessage
 	/// <returns>A new instance of <see cref="RpcMessage"/>.</returns>
 	public static RpcMessage Create( int methodIdent, Type methodReturnType, Guid sender )
 	{
-		var methodReturnTypeDesc = TypeLibrary.GetType( methodReturnType.FullName ?? methodReturnType.Name );
+		if ( methodReturnType.BaseType == typeof(Array) )
+			throw new NotSupportedException( "Arrays are not supported as return types" );
+		
+		var methodReturnTypeDesc = TypeLibrary.GetType( methodReturnType );
 		var generics = Array.Empty<string>();
 		
 		if ( methodReturnTypeDesc.IsGenericType )
