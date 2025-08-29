@@ -12,7 +12,8 @@ It simplifies **client ↔ server** communication while taking full advantage of
 - Supported return types:  
   ✅ **Primitives** (`int`, `float`, `bool`, `string`, etc.)  
   ✅ **structs**  
-  ✅ **records**  
+  ✅ **records**
+  ✅ **List<>**  
 
 ---
 
@@ -37,6 +38,24 @@ protected override void OnStart()
 public async Task<int> Compute(int a, int b)
 {
     return a + b;
+}
+```
+## 🛠 List Usage Example
+
+```csharp
+protected override void OnStart()
+{
+    Task.RunInThreadAsync(async () =>
+    {
+        var results = await Compute(1, 4);
+        Log.Info("Result is: " + string.Join(", ", results));
+    });
+}
+
+[RpcCallback]
+public async Task<List<int>> Compute(int a, int b)
+{
+    return [a + b];
 }
 ```
 ## 🛠 Using a struct as return type
