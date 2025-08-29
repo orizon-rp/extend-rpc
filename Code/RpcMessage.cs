@@ -52,12 +52,15 @@ public readonly struct RpcMessage
 	/// <returns>A new instance of <see cref="RpcMessage"/>.</returns>
 	public static RpcMessage Create( int methodIdent, Type methodReturnType, Guid sender )
 	{
-		var methodReturnTypeDesc = TypeLibrary.GetType( methodReturnType );
-
-		var generics = TypeLibrary.GetGenericArguments( methodReturnType )
-			.Select( x => x.FullName )
-			// .Select( x => TypeLibrary.GetTypeIdent( x ) )
-			.ToArray();
+		var methodReturnTypeDesc = TypeLibrary.GetType( methodReturnType.FullName ?? methodReturnType.Name );
+		var generics = Array.Empty<string>();
+		
+		if ( methodReturnTypeDesc.IsGenericType )
+		{
+			generics = TypeLibrary.GetGenericArguments( methodReturnType )
+				.Select( x => x.FullName ?? x.Name )
+				.ToArray();	
+		}
 
 		return new RpcMessage
 		{
