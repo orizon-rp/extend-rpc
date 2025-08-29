@@ -31,12 +31,27 @@ public static class RpcServer
 
 			var taskResult = handler.Method.InvokeWithReturn<Task>( handler.Instance, args );
 			await taskResult;
-
-			var returnType = TypeLibrary.GetType( request.MethodReturnTypeName ).TargetType;
+			
 			var json = Json.Serialize( taskResult );
-			var obj = Json.Deserialize<Dictionary<string, JsonElement>>( json );
-			var finalResult = obj.GetValueOrDefault( "Result" ).Deserialize( returnType );
+			var dict = Json.Deserialize<Dictionary<string, JsonElement>>( json ).GetValueOrDefault( "Result" );
+			
+			var returnType = TypeLibrary.GetTypeByIdent( request.MethodReturnTypeIdent );
+			var returnTargetType = returnType.TargetType;
 
+			object? finalResult;
+
+			if ( returnType.IsGenericType )
+			{
+				var genericTypes = request.GenericArguments.Select( x => TypeLibrary.GetType( x ).TargetType ).ToArray();
+				var baseGenericType = returnType.MakeGenericType( genericTypes );
+				
+				finalResult = dict.Deserialize( baseGenericType );
+			}
+			else
+			{
+				finalResult = dict.Deserialize( returnTargetType );
+			}
+			
 			using ( Rpc.FilterInclude( Rpc.Caller ) )
 				RpcClient.OnRpcResponse( request, finalResult, request.MethodIdent );
 		}

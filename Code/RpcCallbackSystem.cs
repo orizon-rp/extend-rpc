@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Extend.Callbacks;
 
-internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
+public sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 {
 	public readonly ConcurrentDictionary<int, RpcHandlerInfo> Handlers = new();
 	public readonly ConcurrentDictionary<Guid, RpcPendingOperation> Operations = new();
@@ -109,7 +109,7 @@ internal sealed class RpcCallbackSystem : GameObjectSystem<RpcCallbackSystem>
 			return default;
 		}
 	}
-
+	
 	public void CompleteResponse( RpcMessage response, object? result, int methodIdent )
 	{
 		var operation = new RpcPendingOperation

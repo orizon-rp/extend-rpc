@@ -35,7 +35,7 @@ public readonly struct RpcMessage
 	/// <summary>
 	/// The arguments of the method to be invoked on the server.
 	/// </summary>
-	public int[] GenericArguments { get; private init; }
+	public string[] GenericArguments { get; private init; }
 
 	/// <summary>
 	/// Gets the connection associated with the sender of the message.
@@ -52,14 +52,19 @@ public readonly struct RpcMessage
 	/// <returns>A new instance of <see cref="RpcMessage"/>.</returns>
 	public static RpcMessage Create( int methodIdent, Type methodReturnType, Guid sender )
 	{
-		var methodReturnTypeIdent = TypeLibrary.GetTypeIdent( methodReturnType );
-		
+		var methodReturnTypeDesc = TypeLibrary.GetType( methodReturnType );
+
+		var generics = TypeLibrary.GetGenericArguments( methodReturnType )
+			.Select( x => x.FullName )
+			// .Select( x => TypeLibrary.GetTypeIdent( x ) )
+			.ToArray();
+
 		return new RpcMessage
 		{
 			Id = Guid.NewGuid(),
 			MethodIdent = methodIdent,
-			MethodReturnTypeIdent = methodReturnTypeIdent,
-			GenericArguments = [],
+			MethodReturnTypeIdent = methodReturnTypeDesc.Identity,
+			GenericArguments = generics,
 			Timestamp = DateTime.UtcNow,
 			Sender = sender
 		};
